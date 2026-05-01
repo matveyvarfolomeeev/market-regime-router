@@ -1,0 +1,33 @@
+project:
+  name: market-regime-router
+
+data:
+  exchange: binance
+  symbol: BTC/USDT
+  timeframe: 1h
+  since: null
+  limit: 1000
+  raw_path: data/raw/btc_usdt_1h.parquet
+  processed_path: data/processed/btc_usdt_1h.parquet
+
+features:
+  volatility_window: 24
+  trend_window: 48
+  mean_reversion_window: 24
+  liquidity_window: 24
+
+regimes:
+  n_clusters: 4
+  random_state: 42
+  names:
+    - trend
+    - mean_reversion
+    - high_vol
+    - low_liquidity
+
+backtest:
+  initial_cash: 10000.0
+  fee_bps: 5.0
+  slippage_bps: 2.0
+  annualization_bars: 8760
+
