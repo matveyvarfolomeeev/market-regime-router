@@ -5,6 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
+import yaml
+
 
 @dataclass(frozen=True)
 class DataConfig:
@@ -35,6 +37,7 @@ class RegimeConfig:
 
     n_clusters: int
     random_state: int
+    names: tuple[str, ...]
 
 
 @dataclass(frozen=True)
@@ -58,9 +61,24 @@ class ProjectConfig:
 
 
 def load_config(path: str | Path) -> ProjectConfig:
-    """Load a project config from YAML.
+    """Load a project config from YAML."""
+    with open(path, encoding="utf-8") as config_yaml:
+        config = yaml.safe_load(config_yaml)
 
-    TODO: Parse `configs/default.yaml` into the dataclasses above.
-    """
+    data_config = config["data"]
+    features_config = config["features"]
+    regimes_config = config["regimes"]
+    backtest_config = config["backtest"]
 
-    raise NotImplementedError("Config loading is a milestone 1 task.")
+    data_config["raw_path"] = Path(data_config["raw_path"])
+    data_config["processed_path"] = Path(data_config["processed_path"])
+
+    if len(regimes_config["names"]) != regimes_config["n_clusters"]:
+        raise AssertionError
+
+    data = DataConfig(**data_config)
+    features = FeatureConfig(**features_config)
+    regimes = RegimeConfig(**regimes_config)
+    backtest = BacktestConfig(**backtest_config)
+
+    return ProjectConfig(data, features, regimes, backtest)
