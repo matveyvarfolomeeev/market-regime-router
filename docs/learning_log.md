@@ -16,15 +16,34 @@ Use this file to record small decisions and lessons after each milestone.
 - Added an initial `fetch_ohlcv()` wrapper around `ccxt`.
 - Added unit tests for config loading, normalization behavior, and ingestion with a fake exchange.
 
-## Current Review Notes
+## Milestone 2: Feature Engineering
 
-- `pytest` passes for the current milestone tests.
-- Source cleanup still needs to pass `ruff check .`, `ruff format --check .`, and `mypy src`.
-- Keep library modules free of scratch `if __name__ == "__main__"` examples; use tests or notebooks
-  for experiments.
+- Kept the research feature contract based on `return_1_log` instead of switching back to simple
+  percent return.
+- Implemented causal rolling features:
+  `rolling_volatility`, `trend_strength`, `mean_reversion_distance`, and `liquidity_proxy`.
+- Added tests for feature column order, formula values, no-lookahead behavior, and initial rolling
+  `NaN` handling.
 
-## Next Milestone: Feature Engineering Baseline
+## Milestone 3a: Regime Detector
 
-- Implement `build_features()` with causal rolling features only.
-- Start by replacing the skipped feature tests with real tests for no-lookahead behavior and initial
-  rolling-window `NaN` handling.
+- Implemented `RegimeDetector` as a small wrapper around `StandardScaler + KMeans`.
+- `fit()` rejects feature frames with `NaN` values and returns `self`.
+- `predict()` returns a `pd.Series` named `cluster` with the same index as the input feature frame.
+- Added detector tests for fit contract, prediction shape, deterministic output, `NaN` rejection,
+  and predict-before-fit failure.
+
+## Current Quality Gate
+
+- `pytest`: 22 passed, 6 skipped.
+- `ruff check .`: passed.
+- `ruff format --check .`: passed.
+- `mypy src`: passed.
+
+## Next Milestone: Stable Regime Mapping
+
+- Implement `map_clusters_to_regimes()` in `src/market_regime_router/regimes/label_mapping.py`.
+- Replace the skipped mapping test with real tests proving that permuted cluster ids produce the
+  same human-readable regime assignment.
+- Use simple deterministic ranking first: lowest liquidity, highest volatility, highest trend
+  strength, then the remaining cluster as mean reversion.

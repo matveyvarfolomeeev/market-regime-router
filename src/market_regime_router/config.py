@@ -76,7 +76,7 @@ def load_config(path: str | Path) -> ProjectConfig:
     regimes_config["names"] = tuple(regimes_config["names"])
 
     if len(regimes_config["names"]) != regimes_config["n_clusters"]:
-        raise AssertionError
+        raise ValueError("regime names count must match n_clusters")
 
     data = DataConfig(**data_config)
     features = FeatureConfig(**features_config)

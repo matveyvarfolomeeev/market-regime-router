@@ -29,6 +29,16 @@ ccxt OHLCV
 - OHLCV normalization contract tests for UTC timestamps, duplicate handling, canonical schema,
   and input immutability.
 - Initial `ccxt` ingestion wrapper tested with a fake exchange, without network calls.
+- Causal feature engineering for log return, rolling volatility, trend strength, mean-reversion
+  distance, and OHLCV volume liquidity proxy.
+- `RegimeDetector` wrapper around `StandardScaler + KMeans` with deterministic config-driven
+  random state and timestamp-preserving cluster predictions.
+
+## Current Gap
+
+`regimes/label_mapping.py` still needs the deterministic mapping from arbitrary KMeans cluster ids
+to stable regime names. Until that exists, downstream strategy routing should not depend on raw
+cluster numbers.
 
 ## MVP Constraints
 

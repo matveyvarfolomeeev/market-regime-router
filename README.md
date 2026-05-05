@@ -38,16 +38,20 @@ Useful commands once dependencies are installed:
 
 ## Current State
 
-Milestone 1 is in review:
+Milestones 1 and 2 are green, and the first half of milestone 3 is green:
 
-- `load_config()` is implemented for `configs/default.yaml`.
-- `normalize_ohlcv()` is implemented for schema validation, UTC timestamps, duplicate handling,
-  sorting, numeric conversion, and canonical OHLCV column order.
-- `fetch_ohlcv()` has an initial `ccxt` implementation and a no-network unit test using a fake
-  exchange.
-- Tests were added for config loading, OHLCV normalization, and ingestion behavior.
+- `load_config()` reads `configs/default.yaml`, converts data paths to `Path`, and validates the
+  configured regime names.
+- `normalize_ohlcv()` validates the canonical OHLCV schema, converts timestamps to UTC, sorts rows,
+  removes duplicate timestamps, coerces numeric columns, and returns only canonical OHLCV columns.
+- `fetch_ohlcv()` has an initial `ccxt` wrapper and a no-network unit test using a fake exchange.
+- `build_features()` produces the current research feature contract:
+  `return_1_log`, `rolling_volatility`, `trend_strength`, `mean_reversion_distance`,
+  and `liquidity_proxy`.
+- `RegimeDetector` fits `StandardScaler + KMeans` and returns cluster predictions as a timestamped
+  `pd.Series` named `cluster`.
 
-Before moving to feature engineering, the quality gate should be green:
+Current quality gate:
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest
@@ -56,30 +60,34 @@ Before moving to feature engineering, the quality gate should be green:
 .\.venv\Scripts\mypy.exe src
 ```
 
-The next milestone starts only after the source cleanup is committed.
+Latest local run: `22 passed, 6 skipped`; `ruff check`, `ruff format --check`, and `mypy src` pass.
 
 ## Learning Workflow
 
 The repository starts with interfaces, docs, and test placeholders. Implement one small milestone at a time:
 
-1. Load and normalize OHLCV data. In review.
-2. Build feature columns. Next.
-3. Fit and map unsupervised regimes.
-4. Route regimes to simple strategy signals.
-5. Run the pandas backtest and generate reports.
+1. Load and normalize OHLCV data. Done.
+2. Build feature columns. Done.
+3. Fit unsupervised regimes. Done.
+4. Map arbitrary cluster ids to stable regime names. Next.
+5. Route regimes to simple strategy signals.
+6. Run the pandas backtest and generate reports.
 
 After each milestone, review the diff before moving on.
 
 ## Next Milestone
 
-Milestone 2 is `build_features()` in `src/market_regime_router/features/build.py`.
+Milestone 3b is `map_clusters_to_regimes()` in
+`src/market_regime_router/regimes/label_mapping.py`.
 
-Required baseline features:
+Goal: make arbitrary KMeans cluster ids stable and human-readable.
 
-- `return_1_log`: one-bar log close return.
-- `rolling_volatility`: rolling standard deviation of `return_1_log`.
-- `trend_strength`: efficiency ratio, absolute net movement divided by total absolute movement.
-- `mean_reversion_distance`: rolling z-score of close.
-- `liquidity_proxy`: current volume divided by rolling average volume.
+The implementation should rank cluster-level feature statistics and assign exactly one label to
+each cluster:
 
-All features must be causal: each row can use only current and past candles, never future candles.
+- `low_liquidity`: lowest average `liquidity_proxy`.
+- `high_vol`: highest average `rolling_volatility` among the remaining clusters.
+- `trend`: highest average `trend_strength` among the remaining clusters.
+- `mean_reversion`: the remaining cluster.
+
+The mapping must not depend on the numeric ids produced by KMeans.
