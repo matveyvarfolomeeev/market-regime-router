@@ -76,10 +76,10 @@ Milestone 2 is `build_features()` in `src/market_regime_router/features/build.py
 
 Required baseline features:
 
-- `return_1`: one-bar close return.
-- `rolling_volatility`: rolling standard deviation of `return_1`.
-- `trend_strength`: close relative to a rolling close mean.
+- `return_1_log`: one-bar log close return.
+- `rolling_volatility`: rolling standard deviation of `return_1_log`.
+- `trend_strength`: efficiency ratio, absolute net movement divided by total absolute movement.
 - `mean_reversion_distance`: rolling z-score of close.
-- `liquidity_proxy`: rolling volume measure.
+- `liquidity_proxy`: current volume divided by rolling average volume.
 
 All features must be causal: each row can use only current and past candles, never future candles.

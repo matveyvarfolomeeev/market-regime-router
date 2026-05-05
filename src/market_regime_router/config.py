@@ -73,6 +73,8 @@ def load_config(path: str | Path) -> ProjectConfig:
     data_config["raw_path"] = Path(data_config["raw_path"])
     data_config["processed_path"] = Path(data_config["processed_path"])
 
+    regimes_config["names"] = tuple(regimes_config["names"])
+
     if len(regimes_config["names"]) != regimes_config["n_clusters"]:
         raise AssertionError
 

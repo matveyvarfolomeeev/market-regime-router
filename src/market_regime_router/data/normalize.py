@@ -23,5 +23,3 @@ def normalize_ohlcv(raw: pd.DataFrame) -> pd.DataFrame:
             data[col] = pd.to_numeric(data[col], errors="coerce")
 
     return data[list(OHLCV_COLUMNS)]
-
-
