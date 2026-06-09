@@ -33,9 +33,25 @@ Use this file to record small decisions and lessons after each milestone.
 - Added detector tests for fit contract, prediction shape, deterministic output, `NaN` rejection,
   and predict-before-fit failure.
 
+## Milestone 1b: Paginated Ingestion
+
+- `fetch_ohlcv()` now pages on the bar timestamp when the configured `limit` is
+  larger than a single ccxt request, so the research can use long histories.
+- Raised the default `limit` to 20000 bars of BTC/USDT 1h.
+- Added a no-network paging test driven by a fake exchange.
+
+## Milestone 2b: Expanded Feature Set
+
+- Acted on the `reports/market_cluster_sandbox` research: the original four
+  labels did not describe the real clusters, so the feature set was widened.
+- Added multi-horizon momentum (`return_24_log`, `return_48_log`,
+  `return_168_log`), `volatility_ratio`, `abs_mean_reversion_distance`,
+  `range_pct`, and switched the liquidity proxy to `log_liquidity_proxy`.
+- Kept every feature causal and updated the feature tests for the new contract.
+
 ## Current Quality Gate
 
-- `pytest`: 22 passed, 6 skipped.
+- `pytest`: 23 passed, 6 skipped.
 - `ruff check .`: passed.
 - `ruff format --check .`: passed.
 - `mypy src`: passed.
