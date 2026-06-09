@@ -60,9 +60,19 @@ Use this file to record small decisions and lessons after each milestone.
   removes the ambiguity. Added a permutation-invariance test that proves the
   mapping is independent of cluster id order.
 
+## Milestone 4: Strategy Routing
+
+- Implemented three strategies behind the shared `Strategy` protocol:
+  `TrendStrategy` (long-only momentum), `MeanReversionStrategy` (z-score fade),
+  and `RiskOffStrategy` (always flat).
+- `StrategyRouter.select()` maps each regime to its strategy and lets `risk_off`
+  and `high_vol_reversal` share one defensive instance.
+- Strategies read features from the row context and return flat on `NaN`, so the
+  warmup rows do not generate spurious trades.
+
 ## Current Quality Gate
 
-- `pytest`: 26 passed, 5 skipped.
+- `pytest`: 35 passed, 3 skipped.
 - `ruff check .`: passed.
 - `ruff format --check .`: passed.
 - `mypy src`: passed.
