@@ -6,7 +6,7 @@ data:
   symbol: BTC/USDT
   timeframe: 1h
   since: null
-  limit: 1000
+  limit: 20000
   raw_path: data/raw/btc_usdt_1h.parquet
   processed_path: data/processed/btc_usdt_1h.parquet
 
