@@ -99,6 +99,34 @@ The `execution` config section then controls turnover: `min_hold_bars` freezes t
 number of bars after each change, and `require_full_liquidity_to_enter` only opens fresh positions
 on full-size liquidity.
 
+## Backtest Results
+
+Run on ~19.8k bars of real Binance `BTC/USDT` `1h` data (2024-03 -> 2026-06). The "after" column
+adds the execution policy (higher mean-reversion threshold, minimum hold, liquidity-gated entries):
+
+| metric        | before (naive) | after (execution policy) |
+|---------------|---------------:|-------------------------:|
+| total return  |        -94.24% |                  -46.19% |
+| max drawdown  |        -94.36% |                  -47.45% |
+| Sharpe-like   |          -5.73 |                    -1.56 |
+| trade count   |           5709 |                     1082 |
+
+Regime split (stable across both runs): `quiet_range` 52%, `trend_continuation` 21%,
+`high_vol_reversal` 15%, `risk_off` 11%.
+
+### Conclusions
+
+- The pipeline is correct end to end and the regime split is economically sensible, so the harness
+  is sound.
+- The first run lost almost everything, and the cause was turnover: the mean-reversion strategy
+  churned through the 52% of bars in `quiet_range` and fees/slippage dominated the result.
+- The execution policy cut trades by 81% and more than halved the loss, which confirms turnover was
+  the problem, not a broken model.
+- It is still a loss: the naive strategies have no real edge once costs are charged. This is an
+  honest negative result, not a profitable trading system.
+- Next experiments: a z-score exit band with hysteresis, and walk-forward validation on a held-out
+  period.
+
 ## Learning Workflow
 
 The repository started with interfaces, docs, and test placeholders, then implemented one small
