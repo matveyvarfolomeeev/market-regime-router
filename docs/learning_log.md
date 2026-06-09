@@ -99,8 +99,27 @@ Use this file to record small decisions and lessons after each milestone.
 - `ruff format --check .`: passed.
 - `mypy src`: passed.
 
+## Backtest Findings on Real Data
+
+First full run on ~19.8k bars of real BTC/USDT 1h (2024-03 -> 2026-06):
+
+- total return -94%, max drawdown -94%, Sharpe-like -5.7, **5709 trades**.
+- The regime split is sensible (quiet_range 52%, trend_continuation 21%,
+  high_vol_reversal 15%, risk_off 11%) and the pipeline runs cleanly, so the
+  infrastructure is correct.
+- The loss is a turnover problem: the mean-reversion strategy flips long/short
+  every time the z-score crosses +/-1 during the 52% of bars in `quiet_range`,
+  and `fee_bps + slippage_bps` on that churn dominates the result. The naive
+  strategies have no edge once costs are charged.
+
+Honest conclusion: the MVP is a correct, end-to-end research harness, not a
+profitable strategy. The next experiments should attack turnover: add a
+z-score exit band / hysteresis, hold positions for a minimum number of bars,
+and only trade when the liquidity filter is full size.
+
 ## Project Complete
 
-All six milestones are implemented. Possible future work: cache processed
-features to parquet, add the candidate features from the research that were not
-adopted yet, and validate the backtest on a held-out period.
+All six milestones are implemented. Possible future work: reduce turnover in the
+mean-reversion strategy, cache processed features to parquet, add the candidate
+features from the research that were not adopted yet, and validate on a held-out
+period.
