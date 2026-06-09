@@ -25,20 +25,32 @@ ccxt OHLCV
 
 ## Implemented So Far
 
+The full MVP pipeline is implemented end to end:
+
 - Config loading from YAML into dataclass contracts.
-- OHLCV normalization contract tests for UTC timestamps, duplicate handling, canonical schema,
+- OHLCV normalization with contract tests for UTC timestamps, duplicate handling, canonical schema,
   and input immutability.
-- Initial `ccxt` ingestion wrapper tested with a fake exchange, without network calls.
-- Causal feature engineering for log return, rolling volatility, trend strength, mean-reversion
-  distance, and OHLCV volume liquidity proxy.
-- `RegimeDetector` wrapper around `StandardScaler + KMeans` with deterministic config-driven
+- `ccxt` ingestion wrapper with timestamp-based pagination, tested against a fake exchange without
+  network calls.
+- Causal feature engineering: multi-horizon log returns, rolling volatility and volatility ratio,
+  trend strength, signed and absolute mean-reversion distance, per-bar range, and a log liquidity
+  proxy.
+- `RegimeDetector` wrapper around `StandardScaler + KMeans` with a deterministic config-driven
   random state and timestamp-preserving cluster predictions.
+- `map_clusters_to_regimes()`: deterministic, cluster-id-independent assignment of the research
+  regimes by ranking z-scored cluster feature means.
+- `StrategyRouter` plus three strategies (momentum, mean-reversion, defensive) behind a shared
+  `Strategy` protocol.
+- `run_backtest()`: one-bar-shifted vectorized pandas backtest with fees/slippage on turnover, an
+  equity curve, a trade log, and MVP metrics.
+- `pipeline.py` wires data -> features -> regimes -> mapping -> routing -> liquidity filter ->
+  backtest, and `reporting.py` renders a markdown report and equity-curve plot driven by `cli.py`.
 
-## Current Gap
+## Liquidity Filter
 
-`regimes/label_mapping.py` still needs the deterministic mapping from arbitrary KMeans cluster ids
-to stable regime names. Until that exists, downstream strategy routing should not depend on raw
-cluster numbers.
+Low liquidity is a position-sizing filter applied after routing, not a regime. The pipeline scales
+the routed signal by `log_liquidity_proxy`: full size at or above average volume, half size on thin
+volume, and skipped entirely below roughly half the average volume.
 
 ## MVP Constraints
 

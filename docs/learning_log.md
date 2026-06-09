@@ -80,17 +80,27 @@ Use this file to record small decisions and lessons after each milestone.
 - Subtle lesson: a position change on the last bar never applies because there is
   no next bar to hold it, so round-trip cost tests need an exit with bars left.
 
+## Milestone 6: End-to-End CLI and Reports
+
+- Added `pipeline.py` to wire normalize -> features -> regimes -> mapping ->
+  routing -> liquidity filter -> backtest, and `reporting.py` to render a
+  markdown report plus an equity-curve plot.
+- Applied the research liquidity rule as a position-sizing filter (full / half /
+  skip on `log_liquidity_proxy`) rather than as a regime.
+- Built the `mrr` CLI with `ingest` and `run` subcommands; `run --input` works
+  fully offline from a saved csv/parquet.
+- Added an end-to-end test on synthetic OHLCV plus a CLI test, so the whole
+  pipeline is covered without any network calls.
+
 ## Current Quality Gate
 
-- `pytest`: 40 passed, 0 skipped (all milestone placeholders are now real tests).
+- `pytest`: 43 passed, 0 skipped.
 - `ruff check .`: passed.
 - `ruff format --check .`: passed.
 - `mypy src`: passed.
 
-## Next Milestone: Stable Regime Mapping
+## Project Complete
 
-- Implement `map_clusters_to_regimes()` in `src/market_regime_router/regimes/label_mapping.py`.
-- Replace the skipped mapping test with real tests proving that permuted cluster ids produce the
-  same human-readable regime assignment.
-- Use simple deterministic ranking first: lowest liquidity, highest volatility, highest trend
-  strength, then the remaining cluster as mean reversion.
+All six milestones are implemented. Possible future work: cache processed
+features to parquet, add the candidate features from the research that were not
+adopted yet, and validate the backtest on a held-out period.

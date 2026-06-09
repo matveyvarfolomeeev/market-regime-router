@@ -38,18 +38,26 @@ Useful commands once dependencies are installed:
 
 ## Current State
 
-Milestones 1 and 2 are green, and the first half of milestone 3 is green:
+The end-to-end MVP pipeline is complete: OHLCV ingestion, feature engineering,
+unsupervised regimes, deterministic regime mapping, strategy routing, a pandas
+backtest, and a CLI that writes a report.
 
 - `load_config()` reads `configs/default.yaml`, converts data paths to `Path`, and validates the
   configured regime names.
 - `normalize_ohlcv()` validates the canonical OHLCV schema, converts timestamps to UTC, sorts rows,
   removes duplicate timestamps, coerces numeric columns, and returns only canonical OHLCV columns.
-- `fetch_ohlcv()` has an initial `ccxt` wrapper and a no-network unit test using a fake exchange.
-- `build_features()` produces the current research feature contract:
-  `return_1_log`, `rolling_volatility`, `trend_strength`, `mean_reversion_distance`,
-  and `liquidity_proxy`.
-- `RegimeDetector` fits `StandardScaler + KMeans` and returns cluster predictions as a timestamped
-  `pd.Series` named `cluster`.
+- `fetch_ohlcv()` wraps `ccxt` and pages on the bar timestamp for histories larger than one request.
+- `build_features()` produces the research feature contract: multi-horizon log returns
+  (`return_1/24/48/168_log`), `rolling_volatility`, `volatility_ratio`, `trend_strength`,
+  `mean_reversion_distance`, `abs_mean_reversion_distance`, `range_pct`, and `log_liquidity_proxy`.
+- `RegimeDetector` fits `StandardScaler + KMeans` and returns timestamped cluster predictions.
+- `map_clusters_to_regimes()` assigns stable names (`quiet_range`, `trend_continuation`,
+  `risk_off`, `high_vol_reversal`) independently of the arbitrary KMeans cluster ids.
+- `StrategyRouter` routes each regime to a strategy: mean-reversion for quiet ranges, momentum for
+  trend continuation, and a defensive flat strategy for risk-off and high-vol-reversal.
+- `run_backtest()` runs a one-bar-shifted pandas backtest with fees/slippage on turnover and reports
+  total return, CAGR, max drawdown, a Sharpe-like ratio, turnover, and trade count.
+- `mrr run` wires it all together and writes a markdown report plus an equity-curve plot.
 
 Current quality gate:
 
@@ -60,34 +68,43 @@ Current quality gate:
 .\.venv\Scripts\mypy.exe src
 ```
 
-Latest local run: `22 passed, 6 skipped`; `ruff check`, `ruff format --check`, and `mypy src` pass.
+Latest local run: `43 passed`; `ruff check`, `ruff format --check`, and `mypy src` pass.
+
+## Usage
+
+```powershell
+# Fetch OHLCV into the raw cache (needs network)
+.\.venv\Scripts\python.exe -m market_regime_router.cli ingest
+
+# Run the full pipeline and write reports/backtest/report.md (+ equity_curve.png)
+.\.venv\Scripts\python.exe -m market_regime_router.cli run
+
+# Run offline from a saved OHLCV csv/parquet instead of fetching
+.\.venv\Scripts\python.exe -m market_regime_router.cli run --input data/raw/btc_usdt_1h.parquet
+```
+
+## Regimes
+
+The regimes and the deterministic mapping rule come from the research notes in
+`reports/market_cluster_sandbox/cluster_hypotheses.md`:
+
+- `quiet_range`: low activity; routed to mean-reversion.
+- `trend_continuation`: sustained move up; routed to long-only momentum.
+- `risk_off`: sustained move down; routed to a flat/defensive strategy.
+- `high_vol_reversal`: volatility spike; also handled defensively.
+
+Low liquidity is treated as a risk filter (position sizing), not a regime.
 
 ## Learning Workflow
 
-The repository starts with interfaces, docs, and test placeholders. Implement one small milestone at a time:
+The repository started with interfaces, docs, and test placeholders, then implemented one small
+milestone at a time:
 
 1. Load and normalize OHLCV data. Done.
 2. Build feature columns. Done.
 3. Fit unsupervised regimes. Done.
-4. Map arbitrary cluster ids to stable regime names. Next.
-5. Route regimes to simple strategy signals.
-6. Run the pandas backtest and generate reports.
+4. Map arbitrary cluster ids to stable regime names. Done.
+5. Route regimes to simple strategy signals. Done.
+6. Run the pandas backtest and generate reports. Done.
 
 After each milestone, review the diff before moving on.
-
-## Next Milestone
-
-Milestone 3b is `map_clusters_to_regimes()` in
-`src/market_regime_router/regimes/label_mapping.py`.
-
-Goal: make arbitrary KMeans cluster ids stable and human-readable.
-
-The implementation should rank cluster-level feature statistics and assign exactly one label to
-each cluster:
-
-- `low_liquidity`: lowest average `liquidity_proxy`.
-- `high_vol`: highest average `rolling_volatility` among the remaining clusters.
-- `trend`: highest average `trend_strength` among the remaining clusters.
-- `mean_reversion`: the remaining cluster.
-
-The mapping must not depend on the numeric ids produced by KMeans.
