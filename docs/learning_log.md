@@ -70,9 +70,19 @@ Use this file to record small decisions and lessons after each milestone.
 - Strategies read features from the row context and return flat on `NaN`, so the
   warmup rows do not generate spurious trades.
 
+## Milestone 5: Backtest Engine
+
+- Implemented `run_backtest()` as a vectorized pandas backtest: it shifts the
+  target position by one bar before it earns a return (no look-ahead) and charges
+  `fee_bps + slippage_bps` on the change in held exposure.
+- Implemented `calculate_metrics()` for total return, CAGR, max drawdown, a
+  Sharpe-like ratio, turnover, and trade count.
+- Subtle lesson: a position change on the last bar never applies because there is
+  no next bar to hold it, so round-trip cost tests need an exit with bars left.
+
 ## Current Quality Gate
 
-- `pytest`: 35 passed, 3 skipped.
+- `pytest`: 40 passed, 0 skipped (all milestone placeholders are now real tests).
 - `ruff check .`: passed.
 - `ruff format --check .`: passed.
 - `mypy src`: passed.
