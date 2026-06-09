@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 import yaml
@@ -51,6 +51,14 @@ class BacktestConfig:
 
 
 @dataclass(frozen=True)
+class ExecutionConfig:
+    """Execution policy settings used to keep turnover under control."""
+
+    min_hold_bars: int = 1
+    require_full_liquidity_to_enter: bool = False
+
+
+@dataclass(frozen=True)
 class ProjectConfig:
     """Top-level config passed through the end-to-end pipeline."""
 
@@ -58,6 +66,7 @@ class ProjectConfig:
     features: FeatureConfig
     regimes: RegimeConfig
     backtest: BacktestConfig
+    execution: ExecutionConfig = field(default_factory=ExecutionConfig)
 
 
 def load_config(path: str | Path) -> ProjectConfig:
@@ -82,5 +91,6 @@ def load_config(path: str | Path) -> ProjectConfig:
     features = FeatureConfig(**features_config)
     regimes = RegimeConfig(**regimes_config)
     backtest = BacktestConfig(**backtest_config)
+    execution = ExecutionConfig(**config.get("execution", {}))
 
-    return ProjectConfig(data, features, regimes, backtest)
+    return ProjectConfig(data, features, regimes, backtest, execution)

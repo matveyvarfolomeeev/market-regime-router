@@ -17,7 +17,7 @@ class MeanReversionStrategy:
 
     name = "mean_reversion"
 
-    def __init__(self, entry_threshold: float = 1.0) -> None:
+    def __init__(self, entry_threshold: float = 1.5) -> None:
         self.entry_threshold = entry_threshold
 
     def generate_signal(self, context: StrategyContext) -> Signal:

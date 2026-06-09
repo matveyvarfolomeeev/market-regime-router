@@ -68,7 +68,7 @@ Current quality gate:
 .\.venv\Scripts\mypy.exe src
 ```
 
-Latest local run: `43 passed`; `ruff check`, `ruff format --check`, and `mypy src` pass.
+Latest local run: `48 passed`; `ruff check`, `ruff format --check`, and `mypy src` pass.
 
 ## Usage
 
@@ -94,6 +94,10 @@ The regimes and the deterministic mapping rule come from the research notes in
 - `high_vol_reversal`: volatility spike; also handled defensively.
 
 Low liquidity is treated as a risk filter (position sizing), not a regime.
+
+The `execution` config section then controls turnover: `min_hold_bars` freezes the position for a
+number of bars after each change, and `require_full_liquidity_to_enter` only opens fresh positions
+on full-size liquidity.
 
 ## Learning Workflow
 

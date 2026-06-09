@@ -52,6 +52,13 @@ Low liquidity is a position-sizing filter applied after routing, not a regime. T
 the routed signal by `log_liquidity_proxy`: full size at or above average volume, half size on thin
 volume, and skipped entirely below roughly half the average volume.
 
+## Execution Policy
+
+`apply_execution_policy()` runs over the realized position to control turnover, configured by the
+`execution` section: a fresh entry is blocked unless liquidity is full size, and the position is
+frozen for `min_hold_bars` after any change (exits are always allowed). It sees the realized
+exposure across every regime, so it stays consistent when the active strategy changes.
+
 ## MVP Constraints
 
 - Single-symbol crypto OHLCV.

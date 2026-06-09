@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 
 from market_regime_router.backtest.engine import BacktestResult, run_backtest
-from market_regime_router.config import ProjectConfig
+from market_regime_router.config import ExecutionConfig, ProjectConfig
 from market_regime_router.data.normalize import normalize_ohlcv
 from market_regime_router.features.build import build_features
 from market_regime_router.regimes.detector import RegimeDetector
@@ -54,6 +54,50 @@ def _liquidity_scale(log_liquidity_proxy: float) -> float:
     return 1.0
 
 
+def apply_execution_policy(
+    target_position: pd.Series,
+    liquidity_scale: pd.Series,
+    execution: ExecutionConfig,
+) -> pd.Series:
+    """Damp the realized position to keep turnover down.
+
+    Two rules are walked forward over the realized position, so they see the real
+    exposure across every regime, not just one strategy's view:
+
+    - a fresh entry from flat is blocked unless the liquidity filter is at full
+      size (``require_full_liquidity_to_enter``);
+    - after any change the position is frozen for ``min_hold_bars`` bars before it
+      may move again. Exits to flat are never blocked.
+    """
+    targets = target_position.to_numpy()
+    scales = liquidity_scale.to_numpy()
+    held = np.zeros(len(targets))
+
+    current = 0.0
+    bars_since_change = execution.min_hold_bars  # allow the first trade immediately
+
+    for i in range(len(targets)):
+        target = float(targets[i])
+
+        opening_from_flat = current == 0.0 and target != 0.0
+        if opening_from_flat and execution.require_full_liquidity_to_enter and scales[i] < 1.0:
+            target = 0.0
+
+        # Block early changes unless we are closing the position.
+        if target != current and target != 0.0 and bars_since_change < execution.min_hold_bars:
+            target = current
+
+        if target != current:
+            current = target
+            bars_since_change = 0
+        else:
+            bars_since_change += 1
+
+        held[i] = current
+
+    return pd.Series(held, index=target_position.index, name="position")
+
+
 def build_signal_frame(
     normalized_ohlcv: pd.DataFrame,
     config: ProjectConfig,
@@ -86,6 +130,8 @@ def build_signal_frame(
     scale = pd.Series(scales, index=features.index, name="liquidity_scale")
 
     close = normalized_ohlcv.set_index("timestamp")["close"].reindex(features.index)
+    target_position = signal * scale
+    position = apply_execution_policy(target_position, scale, config.execution)
 
     return pd.DataFrame(
         {
@@ -93,7 +139,7 @@ def build_signal_frame(
             "regime": regimes,
             "signal": signal,
             "liquidity_scale": scale,
-            "position": signal * scale,
+            "position": position,
         }
     )
 

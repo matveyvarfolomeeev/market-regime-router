@@ -31,3 +31,7 @@ backtest:
   slippage_bps: 2.0
   annualization_bars: 8760
 
+execution:
+  min_hold_bars: 12
+  require_full_liquidity_to_enter: true
+

@@ -5,6 +5,7 @@ from pathlib import Path
 from market_regime_router.config import (
     BacktestConfig,
     DataConfig,
+    ExecutionConfig,
     FeatureConfig,
     ProjectConfig,
     RegimeConfig,
@@ -20,6 +21,14 @@ def test_load_config_builds_typed_project_config() -> None:
     assert isinstance(config.features, FeatureConfig)
     assert isinstance(config.regimes, RegimeConfig)
     assert isinstance(config.backtest, BacktestConfig)
+    assert isinstance(config.execution, ExecutionConfig)
+
+
+def test_load_config_reads_execution_policy() -> None:
+    config = load_config("configs/default.yaml")
+
+    assert config.execution.min_hold_bars == 12
+    assert config.execution.require_full_liquidity_to_enter is True
 
 
 def test_load_config_converts_file_paths_to_path_objects() -> None:

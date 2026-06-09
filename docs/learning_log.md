@@ -117,9 +117,26 @@ profitable strategy. The next experiments should attack turnover: add a
 z-score exit band / hysteresis, hold positions for a minimum number of bars,
 and only trade when the liquidity filter is full size.
 
+## Turnover Experiment: Execution Policy
+
+Acted on the previous finding that costs were eating the result. Added an
+`execution` config section and an `apply_execution_policy()` step that runs over
+the realized position:
+
+- raised the mean-reversion entry threshold from 1.0 to 1.5 sigma;
+- `min_hold_bars` freezes the position for N bars after any change (exits are
+  never blocked);
+- `require_full_liquidity_to_enter` only opens a fresh position on full-size
+  liquidity.
+
+Result on the same real BTC/USDT history: trades dropped from 5709 to 1082
+(-81%) and total return improved from -94% to -46%. Still a loss, but it is no
+longer dominated by turnover costs, which means the remaining gap is the
+strategies' lack of edge rather than over-trading.
+
 ## Project Complete
 
-All six milestones are implemented. Possible future work: reduce turnover in the
-mean-reversion strategy, cache processed features to parquet, add the candidate
-features from the research that were not adopted yet, and validate on a held-out
-period.
+All six milestones plus a turnover experiment are implemented. Possible future
+work: a z-score exit band with real hysteresis, walk-forward validation on a
+held-out period, caching processed features to parquet, and the candidate
+features from the research that were not adopted yet.
