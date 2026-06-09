@@ -20,10 +20,10 @@ regimes:
   n_clusters: 4
   random_state: 42
   names:
-    - trend
-    - mean_reversion
-    - high_vol
-    - low_liquidity
+    - quiet_range
+    - trend_continuation
+    - risk_off
+    - high_vol_reversal
 
 backtest:
   initial_cash: 10000.0

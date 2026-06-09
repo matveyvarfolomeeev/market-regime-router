@@ -49,9 +49,20 @@ Use this file to record small decisions and lessons after each milestone.
   `range_pct`, and switched the liquidity proxy to `log_liquidity_proxy`.
 - Kept every feature causal and updated the feature tests for the new contract.
 
+## Milestone 3b: Deterministic Regime Mapping
+
+- Replaced the placeholder regime names with the research labels:
+  `quiet_range`, `trend_continuation`, `risk_off`, `high_vol_reversal`.
+- Implemented `map_clusters_to_regimes()` by z-scoring cluster feature means and
+  picking each regime by its defining trait, so KMeans cluster ids never matter.
+- Learned the hard way that `risk_off` and `high_vol_reversal` both have negative
+  returns: resolving `high_vol_reversal` first by its highest `volatility_ratio`
+  removes the ambiguity. Added a permutation-invariance test that proves the
+  mapping is independent of cluster id order.
+
 ## Current Quality Gate
 
-- `pytest`: 23 passed, 6 skipped.
+- `pytest`: 26 passed, 5 skipped.
 - `ruff check .`: passed.
 - `ruff format --check .`: passed.
 - `mypy src`: passed.
